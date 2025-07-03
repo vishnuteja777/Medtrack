@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Book Appointment - MediCare{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-calendar-plus me-2"></i>Book New Appointment
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('book_appointment') }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="doctor_id" class="form-label">Select Doctor</label>
+                            <select class="form-select" id="doctor_id" name="doctor_id" required onchange="updateDoctorName()">
+                                <option value="">Choose a doctor</option>
+                                {% for doctor in doctors %}
+                                    <option value="{{ doctor.user_id }}" data-name="{{ doctor.name }}" data-specialization="{{ doctor.specialization }}">
+                                        {{ doctor.name }} - {{ doctor.specialization }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <input type="hidden" id="doctor_name" name="doctor_name">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="appointment_datetime" class="form-label">Preferred Date & Time</label>
+                            <input type="datetime-local" class="form-control" id="appointment_datetime" 
+                                   name="appointment_datetime" required min="{{ (datetime.now() + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M') }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="reason" class="form-label">Reason for Visit</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3" 
+                                  placeholder="Please describe your symptoms or reason for the appointment..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-info-circle text-info me-2"></i>Appointment Guidelines
+                                    </h6>
+                                    <ul class="mb-0 small">
+                                        <li>Appointments can be booked minimum 1 hour in advance</li>
+                                        <li>Please arrive 15 minutes before your scheduled time</li>
+                                        <li>Bring all relevant medical documents</li>
+                                        <li>You will receive an SMS confirmation</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-clock text-warning me-2"></i>Available Hours
+                                    </h6>
+                                    <ul class="mb-0 small">
+                                        <li><strong>Morning:</strong> 9:00 AM - 12:00 PM</li>
+                                        <li><strong>Evening:</strong> 2:00 PM - 6:00 PM</li>
+                                        <li><strong>Weekend:</strong> 10:00 AM - 4:00 PM</li>
+                                        <li>Emergency appointments available 24/7</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('patient_dashboard') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-calendar-check me-2"></i>Book Appointment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Available Doctors Section -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h4 class="mb-4">
+            <i class="fas fa-user-md text-primary me-2"></i>Our Doctors
+        </h4>
+        <div class="row g-4">
+            {% for doctor in doctors %}
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="doctor-avatar mb-3">
+                                <i class="fas fa-user-md fa-3x text-primary"></i>
+                            </div>
+                            <h5 class="card-title">{{ doctor.name }}</h5>
+                            <p class="card-text text-muted">{{ doctor.specialization }}</p>
+                            <div class="rating mb-2">
+                                {% for i in range(5) %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% endfor %}
+                                <span class="ms-2 small text-muted">(4.8/5)</span>
+                            </div>
+                            <button class="btn btn-outline-primary btn-sm" onclick="selectDoctor('{{ doctor.user_id }}', '{{ doctor.name }}')">
+                                Select Doctor
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+function updateDoctorName() {
+    const select = document.getElementById('doctor_id');
+    const selectedOption = select.options[select.selectedIndex];
+    const doctorNameInput = document.getElementById('doctor_name');
+    
+    if (selectedOption.value) {
+        doctorNameInput.value = selectedOption.getAttribute('data-name');
+    } else {
+        doctorNameInput.value = '';
+    }
+}
+
+function selectDoctor(doctorId, doctorName) {
+    document.getElementById('doctor_id').value = doctorId;
+    document.getElementById('doctor_name').value = doctorName;
+    
+    // Scroll to form
+    document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Set minimum date to tomorrow
+document.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+    now.setHours(now.getHours() + 1);
+    const minDateTime = now.toISOString().slice(0, 16);
+    document.getElementById('appointment_datetime').min = minDateTime;
+});
+</script>
+{% endblock %}

@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Appointment History - MediCare{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">
+                <i class="fas fa-history text-primary me-2"></i>
+                {% if session.user_type == 'patient' %}
+                    My Appointment History
+                {% else %}
+                    Patient Appointment History
+                {% endif %}
+            </h1>
+            <div>
+                {% if session.user_type == 'patient' %}
+                    <a href="{{ url_for('patient_dashboard') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5 class="mb-0">All Appointments</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Search appointments..." id="searchInput">
+                            <button class="btn btn-outline-secondary" type="button">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if appointments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    {% if session.user_type == 'patient' %}
+                                        <th>Doctor</th>
+                                        <th>Specialization</th>
+                                    {% else %}
+                                        <th>Patient</th>
+                                        <th>Contact</th>
+                                    {% endif %}
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appointment in appointments %}
+                                    <tr>
+                                        {% if session.user_type == 'patient' %}
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-user-md text-primary me-2"></i>
+                                                    <div>
+                                                        <strong>{{ appointment.doctor_name }}</strong>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark">{{ appointment.specialization }}</span>
+                                            </td>
+                                        {% else %}
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-user text-primary me-2"></i>
+                                                    <div>
+                                                        <strong>{{ appointment.patient_name }}</strong>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">Contact info not available</small>
+                                            </td>
+                                        {% endif %}
+                                        <td>{{ appointment.appointment_datetime[:10] }}</td>
+                                        <td>{{ appointment.appointment_datetime[11:16] }}</td>
+                                        <td>
+                                            {% if appointment.reason %}
+                                                <span class="text-truncate d-inline-block" style="max-width: 200px;" 
+                                                      title="{{ appointment.reason }}">
+                                                    {{ appointment.reason }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">No reason specified</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if appointment.status == 'completed' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% elif appointment.status == 'cancelled' %}
+                                                <span class="badge bg-danger">Cancelled</span>
+                                            {% elif appointment.status == 'scheduled' %}
+                                                <span class="badge bg-primary">Scheduled</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">{{ appointment.status|title }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <button type="button" class="btn btn-outline-info" 
+                                                        onclick="viewDetails('{{ appointment.appointment_id }}')" 
+                                                        title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                {% if appointment.status == 'scheduled' %}
+                                                    <button type="button" class="btn btn-outline-warning" 
+                                                            onclick="reschedule('{{ appointment.appointment_id }}')" 
+                                                            title="Reschedule">
+                                                        <i class="fas fa-calendar-alt"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-danger" 
+                                                            onclick="cancelAppointment('{{ appointment.appointment_id }}')" 
+                                                            title="Cancel">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Appointments Found</h4>
+                        <p class="text-muted">
+                            {% if session.user_type == 'patient' %}
+                                You haven't booked any appointments yet.
+                            {% else %}
+                                No patient appointments found.
+                            {% endif %}
+                        </p>
+                        {% if session.user_type == 'patient' %}
+                            <a href="{{ url_for('book_appointment') }}" class="btn btn-primary">
+                                <i class="fas fa-calendar-plus me-2"></i>Book Your First Appointment
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Appointment Details Modal -->
+<div class="modal fade" id="appointmentDetailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Appointment Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="appointmentDetails">
+                    <!-- Details will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewDetails(appointmentId) {
+    // This would fetch appointment details and show in modal
+    document.getElementById('appointmentDetails').innerHTML = `
+        <div class="text-center">
+            <i class="fas fa-info-circle fa-3x text-info mb-3"></i>
+            <p>Appointment details for ID: ${appointmentId}</p>
+            <p class="text-muted">Full details functionality will be implemented with proper backend integration.</p>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('appointmentDetailsModal')).show();
+}
+
+function reschedule(appointmentId) {
+    if (confirm('Do you want to reschedule this appointment?')) {
+        alert('Reschedule functionality will be implemented with proper backend integration.');
+    }
+}
+
+function cancelAppointment(appointmentId) {
+    if (confirm('Are you sure you want to cancel this appointment?')) {
+        alert('Cancel appointment functionality will be implemented with proper backend integration.');
+    }
+}
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const searchTerm = this.value.toLowerCase();
+    const tableRows = document.querySelectorAll('tbody tr');
+    
+    tableRows.forEach(function(row) {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}
