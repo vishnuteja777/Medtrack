@@ -64,15 +64,18 @@ def doctor_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+SNS_TOPIC_ARN = 'arn:aws:sns:us-east-1:724772095615:medtrack:7fce9763-0b0c-478f-996b-b493b3deee79'  # <-- Replace with your real ARN
+
 def send_sms_notification(phone_number, message):
-    """Send SMS notification using AWS SNS"""
     try:
         if sns:
             response = sns.publish(
-                PhoneNumber=phone_number,
-                Message=message
+                TopicArn=SNS_TOPIC_ARN,
+                Message=message,
+                Subject="Appointment Notification"
             )
             return response
+
     except Exception as e:
         print(f"SMS sending error: {e}")
         return None
